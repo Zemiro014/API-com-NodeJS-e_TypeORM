@@ -1,6 +1,6 @@
-import {Request, Response} from 'express';
-import { getRepository } from 'typeorm';
-import { User } from '../models/User';
+import { Request, Response } from 'express';
+import { getCustomRepository } from 'typeorm';
+import { UsersRepository } from '../repositories/UsersRepository';
 
 class UserController
 {
@@ -8,7 +8,7 @@ class UserController
     {
         const {name, email} = request.body;
         
-        const usersRepository = getRepository(User); // declarando um repositório do tipo "User"
+        const usersRepository = getCustomRepository(UsersRepository);
 
         // Antes de adicionar um novo user, primeiro busque no meu banco de dados se existe alguém com email recebido
         const userAlreadyExists = await usersRepository.findOne({
@@ -28,8 +28,17 @@ class UserController
         })
 
         await usersRepository.save(user);
-        return response.json(user);
+        return response.status(201).json(user);
+    }
+
+    async showAllUsers(request: Request, response: Response)
+    {
+        const usersRepository = getCustomRepository(UsersRepository);
+
+        const all = await usersRepository.find();
+
+        return response.json(all);
     }
 }
 
-export {UserController}
+export { UserController };
