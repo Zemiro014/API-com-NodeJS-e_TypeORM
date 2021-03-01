@@ -30,23 +30,24 @@ class SendEmailController{
             })
         }
 
-        const surveyUserAlredyExixts = surveyUserRepo.findOne(
-            {
-                where: [{user_id: user.id}, {value: null}],
+        const surveyUserAlredyExixts = await surveyUserRepo.findOne({
+                where: {user_id: user.id, value: null},
                 relations:["user", "survey"],
             }
-        )
+        );
+
+        const npsPath = resolve(__dirname, "..", "views", "emails", "npsMail.hbs"); // Definir o caminho do arquivo        
+
         const variables = {
             name: user.name,
             title: survey.title ,
             description: survey.description,
-            user_id: user.id,
+            id: "",
             link: process.env.URL_MAIL,
         }
 
-        const npsPath = resolve(__dirname, "..", "views", "emails", "npsMail.hbs"); // Definir o caminho do arquivo
-
         if(surveyUserAlredyExixts){
+            variables.id = surveyUserAlredyExixts.id;
             await SendEmailService.execute(email, survey.title, variables, npsPath);
             return response.json(surveyUserAlredyExixts);
         }
@@ -56,11 +57,9 @@ class SendEmailController{
             survey_id
         })
         await surveyUserRepo.save(surveyUser);
-        // Enviar Email
-     
 
-     
-
+        // Enviar Email  
+        variables.id = surveyUser.id;
         await SendEmailService.execute(email, survey.title, variables, npsPath);
 
         return response.json(surveyUser);

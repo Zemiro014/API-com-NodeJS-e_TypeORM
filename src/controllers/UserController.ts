@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { getCustomRepository } from 'typeorm';
 import { UsersRepository } from '../repositories/UsersRepository';
+import * as YUP from 'yup';
 
 class UserController
 {
@@ -8,6 +9,25 @@ class UserController
     {
         const {name, email} = request.body;
         
+        const schema = YUP.object().shape({
+            name: YUP.string().required(),
+            email:YUP.string().email().required()
+        })
+
+        try
+        { 
+            await schema.validate(request.body, { abortEarly: false}) ;
+        }
+        catch(error) { return response.status(400).json({ error: error }); }
+
+        /*
+            if(!(await schema.isValid(request.body)))
+            {
+                return response.status(400).json({
+                    error: "Validation Failed",
+                })
+            }
+        */
         const usersRepository = getCustomRepository(UsersRepository);
 
         // Antes de adicionar um novo user, primeiro busque no meu banco de dados se existe alguém com email recebido
